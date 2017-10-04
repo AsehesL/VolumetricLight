@@ -14,6 +14,7 @@ public class VolumeLight : MonoBehaviour {
     public LayerMask cullingMask;
 
     private Camera m_DepthRenderCamera;
+    private Material m_Material;
 
     private RenderTexture m_DepthTexture;
 
@@ -29,6 +30,13 @@ public class VolumeLight : MonoBehaviour {
         m_DepthTexture = null;
     }
 
+    void OnPreRender()
+    {
+        m_Material.SetMatrix("internalProjection", m_DepthRenderCamera.projectionMatrix);
+        m_Material.SetVector("lightZParams", new Vector4(m_DepthRenderCamera.farClipPlane, m_DepthRenderCamera.orthographicSize*m_DepthRenderCamera.aspect, 0, 0));
+
+    }
+
     private void CreateCamera()
     {
         m_DepthRenderCamera = gameObject.AddComponent<Camera>();
@@ -41,7 +49,7 @@ public class VolumeLight : MonoBehaviour {
         m_DepthRenderCamera.farClipPlane = farClipPlane;
         m_DepthRenderCamera.fieldOfView = fieldOfView;
         m_DepthRenderCamera.orthographicSize = orthographicSize;
-        m_DepthRenderCamera.SetReplacementShader(Shader.Find("Hidden/DepthRender"), "RenderType");
+        m_DepthRenderCamera.SetReplacementShader(Shader.Find("Hidden/ReplaceDepth"), "RenderType");
 
         m_DepthTexture = new RenderTexture(1024, 1024, 24);
         m_DepthRenderCamera.targetTexture = m_DepthTexture;
@@ -50,7 +58,9 @@ public class VolumeLight : MonoBehaviour {
     private void CreateMesh()
     {
         MeshRenderer meshRenderer = gameObject.AddComponent<MeshRenderer>();
-        meshRenderer.sharedMaterial = new Material(Shader.Find("Diffuse"));
+        m_Material = new Material(Shader.Find("Unlit/VolumeLight2"));
+        meshRenderer.sharedMaterial = m_Material;
+        m_Material.SetTexture("_DepthTex", m_DepthTexture);
         MeshFilter meshFilter = gameObject.AddComponent<MeshFilter>();
         Mesh mesh = new Mesh();
         Matrix4x4 mt = transform.worldToLocalMatrix*m_DepthRenderCamera.cameraToWorldMatrix*m_DepthRenderCamera.projectionMatrix.inverse;
@@ -74,6 +84,7 @@ public class VolumeLight : MonoBehaviour {
             1,5,6,1,6,2,
             2,6,7,2,7,3,
             0,3,4,3,7,4,
+            4,5,6,4,6,7
         };
         meshFilter.sharedMesh = mesh;
     }
