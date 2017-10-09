@@ -1,1 +1,3 @@
 # VolumeLight
+
+![](doc/preview.gif)
