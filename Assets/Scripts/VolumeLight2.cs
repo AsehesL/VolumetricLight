@@ -14,10 +14,10 @@ public class VolumeLight2 : MonoBehaviour
         {
             if (m_Directional != value)
             {
+                m_Directional = value;
                 RefreshCamera();
                 RefreshLightDir();
             }
-            m_Directional = value;
         }
         get { return m_Directional; }
     }
@@ -27,9 +27,9 @@ public class VolumeLight2 : MonoBehaviour
         {
             if (m_Bias != value)
             {
+                m_Bias = value;
                 RefreshBias();
             }
-            m_Bias = value;
         }
         get { return m_Bias; }
     }
@@ -40,10 +40,10 @@ public class VolumeLight2 : MonoBehaviour
         {
             if (m_Near != value)
             {
+                m_Near = value;
                 RefreshCamera();
                 RefreshAtten();
             }
-            m_Near = value;
         }
         get { return m_Near; }
     }
@@ -53,10 +53,10 @@ public class VolumeLight2 : MonoBehaviour
         {
             if (m_Far != value)
             {
+                m_Far = value;
                 RefreshCamera();
                 RefreshAtten();
             }
-            m_Far = value;
         }get { return m_Far; }
     }
     public float fieldOfView
@@ -65,9 +65,9 @@ public class VolumeLight2 : MonoBehaviour
         {
             if (m_FieldOfView != value)
             {
+                m_FieldOfView = value;
                 RefreshCamera();
             }
-            m_FieldOfView = value;
         }
         get { return m_FieldOfView; }
     }
@@ -77,9 +77,9 @@ public class VolumeLight2 : MonoBehaviour
         {
             if (m_Size != value)
             {
+                m_Size = value;
                 RefreshCamera();
             }
-            m_Size = value;
         }
         get { return m_Size; }
     }
@@ -90,9 +90,9 @@ public class VolumeLight2 : MonoBehaviour
         {
             if (m_Aspect != value)
             {
+                m_Aspect = value;
                 RefreshCamera();
             }
-            m_Aspect = value;
         }
         get { return m_Aspect; }
     }
@@ -102,9 +102,9 @@ public class VolumeLight2 : MonoBehaviour
         {
             if (m_Color != value)
             {
+                m_Color = value;
                 RefreshColor();
             }
-            m_Color = value;
         }
         get { return m_Color; }
     }
@@ -114,9 +114,9 @@ public class VolumeLight2 : MonoBehaviour
         {
             if (m_Intensity != value)
             {
+                m_Intensity = value;
                 RefreshColor();
             }
-            m_Intensity = value;
         }
         get { return m_Intensity; }
     }
@@ -126,9 +126,9 @@ public class VolumeLight2 : MonoBehaviour
         {
             if (m_Atten != value)
             {
+                m_Atten = value;
                 RefreshAtten();
             }
-            m_Atten = value;
         }
         get { return m_Atten; }
     }
@@ -138,10 +138,25 @@ public class VolumeLight2 : MonoBehaviour
         set
         {
             if (m_Cookie != value)
+            {
+                m_Cookie = value;
                 RefreshCookie();
-            m_Cookie = value;
+            }
         }
         get { return m_Cookie; }
+    }
+
+    public LayerMask cullingMask
+    {
+        set
+        {
+            if (m_CullingMask != value)
+            {
+                m_CullingMask = value;
+                RefreshCullingMask();
+            }
+        }
+        get { return m_CullingMask; }
     }
 
     [SerializeField]
@@ -274,6 +289,7 @@ public class VolumeLight2 : MonoBehaviour
 
     private void RefreshCookie()
     {
+        if (!Application.isPlaying) return;
         if (m_Cookie)
         {
             Shader.SetGlobalTexture("internalCookie", m_Cookie);
@@ -288,11 +304,13 @@ public class VolumeLight2 : MonoBehaviour
 
     private void RefreshBias()
     {
+        if (!Application.isPlaying) return;
         Shader.SetGlobalFloat("internalBias", m_Bias);
     }
 
     private void RefreshColor()
     {
+        if (!Application.isPlaying) return;
         Shader.SetGlobalColor("internalWorldLightColor",
                new Color(m_Color.r * m_Intensity, m_Color.g * m_Intensity, m_Color.b * m_Intensity, m_Color.a));
         m_Material.SetColor("_Color", new Color(m_Color.r * m_Intensity, m_Color.g * m_Intensity, m_Color.b * m_Intensity, m_Color.a));
@@ -300,6 +318,7 @@ public class VolumeLight2 : MonoBehaviour
 
     private void RefreshCamera()
     {
+        if (!Application.isPlaying) return;
         m_DepthRenderCamera.aspect = m_Aspect;
         m_DepthRenderCamera.farClipPlane = m_Far;
         m_DepthRenderCamera.nearClipPlane = m_Near;
@@ -310,16 +329,20 @@ public class VolumeLight2 : MonoBehaviour
         m_Material.SetMatrix("internalProjection", m_DepthRenderCamera.projectionMatrix);
         m_Material.SetMatrix("internalProjectionInv", m_DepthRenderCamera.projectionMatrix.inverse);
 
+        Shader.SetGlobalMatrix("internalWorldLightVP", m_DepthRenderCamera.projectionMatrix);
+
         RefreshMesh();
     }
 
     private void RefreshCullingMask()
     {
+        if (!Application.isPlaying) return;
         m_DepthRenderCamera.cullingMask = m_CullingMask;
     }
 
     private void RefreshAtten()
     {
+        if (!Application.isPlaying) return;
         m_Material.SetVector("_LightParams", new Vector4(m_DepthRenderCamera.farClipPlane, m_Atten, 0, 0));
         Shader.SetGlobalVector("internalProjectionParams",
                new Vector4(m_Atten, m_DepthRenderCamera.nearClipPlane, m_DepthRenderCamera.farClipPlane, 1 / m_DepthRenderCamera.farClipPlane));
@@ -327,6 +350,7 @@ public class VolumeLight2 : MonoBehaviour
 
     private void RefreshLightDir()
     {
+        if (!Application.isPlaying) return;
         if (!m_Directional)
             Shader.SetGlobalVector("internalWorldLightPos",
                 new Vector4(transform.position.x, transform.position.y, transform.position.z, 1));
@@ -337,13 +361,14 @@ public class VolumeLight2 : MonoBehaviour
 
     private void RefreshLightWorldToLocalMatrix()
     {
-
+        if (!Application.isPlaying) return;
         RefreshLightDir();
         Shader.SetGlobalMatrix("internalWorldLightMV", m_WorldToLocal);
     }
 
     private void RefreshMesh()
     {
+        if (!Application.isPlaying) return;
         m_Mesh.Clear();
         m_VertexList.Clear();
 
@@ -358,8 +383,6 @@ public class VolumeLight2 : MonoBehaviour
         Vector3 p6 = new Vector3(-1, 1, 1);
         Vector3 p7 = new Vector3(1, 1, 1);
         Vector3 p8 = new Vector3(1, -1, 1);
-        //p1.z = -p1.z; p2.z = -p2.z; p3.z = -p3.z; p4.z = -p4.z;
-        //p5.z = -p5.z; p6.z = -p6.z; p7.z = -p7.z; p8.z = -p8.z;
         m_VertexList.Add(mt.MultiplyPoint(p1));
         m_VertexList.Add(mt.MultiplyPoint(p2));
         m_VertexList.Add(mt.MultiplyPoint(p3));
