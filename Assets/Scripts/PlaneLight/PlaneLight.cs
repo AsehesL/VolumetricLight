@@ -87,7 +87,6 @@ public class PlaneLight : MonoBehaviour
         m_Material.SetMatrix("internalProjection", m_DepthRenderCamera.projectionMatrix);
         m_Material.SetMatrix("internalProjectionInv", m_DepthRenderCamera.projectionMatrix.inverse);
         m_Material.SetVector("_LightParams", new Vector4(m_DepthRenderCamera.farClipPlane, atten, 0, 0));
-
     }
 
     void OnPreCull()

@@ -75,20 +75,20 @@
 					curpos.xyz += pjViewDir.xyz*k*delta;
 					float4 curvpos = mul(internalProjectionInv, curpos);
 					curvpos /= curvpos.w;
+					float boardFac = 1;
+					if (curpos.x >= -1 && curpos.x <= 1 && curpos.y >= -1 && curpos.y <= 1 && curpos.z >= -1 && curpos.z <= 1)
+						boardFac = 1;
 					curpos = ComputeScreenPos(curpos);
 					half2 pjuv = curpos.xy / curpos.w;
 #if UNITY_UV_STARTS_AT_TOP
 					pjuv.y = 1 - pjuv.y;
 #endif
-					float boardFac = 0;
-					if (pjuv.x>=0 && pjuv.x<=1 && pjuv.y>=0 && pjuv.y<=1)
-						boardFac = 1;
 
 					half dep = DecodeFloatRGBA(tex2D(_DepthTex, pjuv));
 					half cdep = -curvpos.z / lightZParams.x;
 
 					if (cdep < dep)
-						col.a += 0.01*boardFac;
+						col.a += 0.01 *boardFac;
 				}
 				
 				UNITY_APPLY_FOG(i.fogCoord, col);

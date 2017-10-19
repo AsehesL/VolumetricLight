@@ -48,6 +48,8 @@
 
 			half4 _Color;
 			half4 _LightParams;
+
+			half3 camPos;
 			
 			v2f vert (appdata v)
 			{
@@ -76,6 +78,8 @@
 				pjCamPos /= pjCamPos.w;
 
 				float3 pjViewDir = normalize(beginPjPos.xyz - pjCamPos.xyz);
+				if (i.viewCamPos.z > 0)
+					pjViewDir = -pjViewDir;
 
 				for (float k = 0; k< RAY_STEP; k++) {
 					float4 curpos = beginPjPos;
@@ -83,14 +87,17 @@
 					curpos.xyz += vdir;
 					float4 curvpos = mul(internalProjectionInv, curpos);
 					curvpos /= curvpos.w;
+					float boardFac = 1;
+					if (curpos.x >= -1 && curpos.x <= 1 && curpos.y >= -1 && curpos.y <= 1 && curpos.z >= -1 && curpos.z <= 1)
+						boardFac = 1;
 					curpos = ComputeScreenPos(curpos);
 					half2 pjuv = curpos.xy / curpos.w;
 #if UNITY_UV_STARTS_AT_TOP
 					pjuv.y = 1 - pjuv.y;
 #endif
-					float boardFac = 0;
+					/*float boardFac = 0;
 					if (pjuv.x>=0 && pjuv.x<=1 && pjuv.y>=0 && pjuv.y<=1)
-						boardFac = 1;
+						boardFac = 1;*/
 
 					half dep = DecodeFloatRGBA(tex2D(_DepthTex, pjuv));
 					half4 cookie = tex2D(_Cookie, pjuv);
