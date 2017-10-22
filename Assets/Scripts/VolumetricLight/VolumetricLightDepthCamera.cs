@@ -1,6 +1,9 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+/// <summary>
+/// 深度渲染相机
+/// </summary>
 public class VolumetricLightDepthCamera
 {
     public Camera depthRenderCamera { get { return m_DepthRenderCamera; } }

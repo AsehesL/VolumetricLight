@@ -9,14 +9,8 @@ public class CameraController : MonoBehaviour {
     public float SpeedMove = 50;
     public float SpeedRotate = 500;
     public float SpeedScalling = 100;
-    public bool OpenDepth;
-
-    private static Transform instance;
 
 	void Start () {
-        instance = transform;
-        if (OpenDepth)
-            Camera.main.depthTextureMode = DepthTextureMode.Depth;
 	}
 
     void Update()
@@ -31,12 +25,6 @@ public class CameraController : MonoBehaviour {
             CameraMove();
         }
         CameraScalling(_scrollWheelValue);
-    }
-
-    public static void ResetCamera()
-    {
-        instance.position = new Vector3(4.1f, 7.88f, -5.2f);
-        instance.rotation = Quaternion.Euler(40, 0, 0);
     }
 
     private void CameraMove()

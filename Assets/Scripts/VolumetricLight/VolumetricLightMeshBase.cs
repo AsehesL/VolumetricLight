@@ -2,6 +2,9 @@
 using System.Collections;
 using System.Collections.Generic;
 
+/// <summary>
+/// 体积光载体mesh基类
+/// </summary>
 public abstract class VolumetricLightMeshBase
 {
     private Mesh lightMesh;
@@ -42,7 +45,7 @@ public abstract class VolumetricLightMeshBase
         OnInit(light);
     }
 
-    public void RefreshMesh(Color color, float range, float subdivision, Matrix4x4 matrix)
+    public void RefreshMesh(Color color, float intensity, float range, float subdivision, Matrix4x4 matrix)
     {
         if (!m_IsSupport)
             return;
@@ -51,7 +54,8 @@ public abstract class VolumetricLightMeshBase
             m_VertexList = new List<Vector3>();
         if (m_ColorList == null)
             m_ColorList = new List<Color>();
-        OnRefreshMesh(color, range, subdivision, matrix);
+        Color col = new Color(color.r * intensity * 0.5f, color.g * intensity * 0.5f, color.b * intensity * 0.5f, color.a);
+        OnRefreshMesh(col, range, subdivision, matrix);
     }
     
 
@@ -77,14 +81,15 @@ public abstract class VolumetricLightMeshBase
         OnDestroy();
     }
 
-    public void RefreshColor(Color color)
+    public void RefreshColor(Color color, float intensity)
     {
         if (m_ColorList == null) return;
         if (m_VertexList == null) return;
         if (m_Indexes == null) return;
+        Color col = new Color(color.r*intensity*0.5f, color.g*intensity*0.5f, color.b*intensity*0.5f, color.a);
         for (int i = 0; i < m_ColorList.Count; i++)
         {
-            m_ColorList[i] = color;
+            m_ColorList[i] = col;
         }
         lightMesh.Clear();
         lightMesh.SetVertices(m_VertexList);

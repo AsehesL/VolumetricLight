@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// 体积光渲染脚本
+/// </summary>
 public class VolumetricLight : MonoBehaviour {
 
     public enum Quality
@@ -11,48 +14,64 @@ public class VolumetricLight : MonoBehaviour {
         Low,
     }
 
+    /// <summary>
+    /// 是否平行光
+    /// </summary>
     public bool directional
     {
         get { return this.m_Directional; }
         set { ResetDirectional(value); }
     }
 
+    /// <summary>
+    /// 阴影Bias
+    /// </summary>
     public float shadowBias
     {
         get { return this.m_ShadowBias; }
         set { ResetShadowBias(value); }
     }
-
+    /// <summary>
+    /// 渲染范围
+    /// </summary>
     public float range
     {
         get { return this.m_Range; }
         set { ResetRange(value); }
     }
-
+    /// <summary>
+    /// 灯光夹角（非平行光）
+    /// </summary>
     public float angle
     {
         get { return this.m_Angle; }
         set { ResetAngle(value); }
     }
-
+    /// <summary>
+    /// 灯光区域大小（平行光）
+    /// </summary>
     public float size
     {
         get { return this.m_Size; }
         set { ResetSize(value); }
     }
-
+    
     public float aspect
     {
         get { return this.m_Aspect; }
         set { ResetAspect(value); }
     }
-
+    /// <summary>
+    /// 灯光颜色
+    /// </summary>
     public Color color
     {
         get { return this.m_Color; }
         set { ResetColor(value, m_Intensity); }
     }
-
+    /// <summary>
+    /// 灯光强度
+    /// </summary>
     public float intensity
     {
         get { return m_Intensity; }
@@ -166,7 +185,7 @@ public class VolumetricLight : MonoBehaviour {
 
         ResetQuality(m_Quality == Quality.Low, m_Quality == Quality.Middle, m_Quality == Quality.High);
 
-        m_Mesh.RefreshMesh(m_Color, m_Range, m_Subdivision, transform.worldToLocalMatrix * m_DepthCamera.depthRenderCamera.cameraToWorldMatrix * m_DepthCamera.depthRenderCamera.projectionMatrix.inverse);
+        m_Mesh.RefreshMesh(m_Color, m_Intensity, m_Range, m_Subdivision, transform.worldToLocalMatrix * m_DepthCamera.depthRenderCamera.cameraToWorldMatrix * m_DepthCamera.depthRenderCamera.projectionMatrix.inverse);
 
         m_IsInitialized = true;
     }
@@ -189,7 +208,7 @@ public class VolumetricLight : MonoBehaviour {
         {
             m_Projection = m_DepthCamera.depthRenderCamera.projectionMatrix;
             Shader.SetGlobalMatrix(m_InternalWorldLightVPID, m_Projection);
-            m_Mesh.RefreshMesh(m_Color, m_Range, m_Subdivision, transform.worldToLocalMatrix * m_DepthCamera.depthRenderCamera.cameraToWorldMatrix * m_DepthCamera.depthRenderCamera.projectionMatrix.inverse);
+            m_Mesh.RefreshMesh(m_Color, m_Intensity, m_Range, m_Subdivision, transform.worldToLocalMatrix * m_DepthCamera.depthRenderCamera.cameraToWorldMatrix * m_DepthCamera.depthRenderCamera.projectionMatrix.inverse);
         }
         if (m_WorldToCam != m_DepthCamera.depthRenderCamera.worldToCameraMatrix)
         {
@@ -280,13 +299,13 @@ public class VolumetricLight : MonoBehaviour {
         if (!m_IsInitialized) return;
         Shader.SetGlobalColor(m_InternalLightColorID, new Color(m_Color.r * m_Intensity, m_Color.g * m_Intensity, m_Color.b * m_Intensity, m_Color.a));
         if (m_Mesh == null) return;
-        m_Mesh.RefreshColor(m_Color);
+        m_Mesh.RefreshColor(m_Color, m_Intensity);
     }
 
     private void ResetCookie(Texture2D cookie)
     {
         if (m_Cookie == cookie) return;
-        if (!m_VertexBased) return;
+        if (m_VertexBased) return;
         m_Cookie = cookie;
         if (!m_IsInitialized) return;
         if (m_Cookie && !m_VertexBased)

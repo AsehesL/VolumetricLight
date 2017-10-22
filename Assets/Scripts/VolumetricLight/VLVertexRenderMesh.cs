@@ -1,6 +1,9 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+/// <summary>
+/// 基于顶点着色器的体积光Mesh
+/// </summary>
 public class VLVertexRenderMesh : VolumetricLightMeshBase
 {
 

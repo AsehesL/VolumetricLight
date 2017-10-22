@@ -1,6 +1,9 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+/// <summary>
+/// 基于片段着色器的体积光Mesh
+/// </summary>
 public class VLPixelRenderMesh : VolumetricLightMeshBase
 {
     protected override Shader LoadShader()

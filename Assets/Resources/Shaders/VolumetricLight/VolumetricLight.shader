@@ -57,7 +57,9 @@
 
 			float LinearLightEyeDepth(float z)
 			{
-				return 1.0 / (internalProjectionParams.y * z + internalProjectionParams.z);
+				float oz = (-z*(1 / internalProjectionParams.w - 0.01) + 1 / internalProjectionParams.w + 0.01) / 2;
+				float pz = 1.0 / (internalProjectionParams.y * z + internalProjectionParams.z);
+				return lerp(oz, pz, internalWorldLightPos.w);
 			}
 			
 			v2f vert (appdata v)

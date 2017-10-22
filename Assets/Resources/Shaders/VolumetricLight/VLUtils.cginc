@@ -1,5 +1,5 @@
 #ifndef VL_UTILS
-#define VL_UTILS
+#define VL_UTILS 
 
 sampler2D internalShadowMap;
 #ifdef USE_COOKIE
@@ -18,15 +18,15 @@ float internalBias;
 #define VL_SHADOW_COORD(n,m) float vl_depth:TEXCOORD##n; \
 							float4 vl_proj:TEXCOORD##m; 
 
-#if UNITY_UV_STARTS_AT_TOP
-#define VL_SCALE float vl_scale = -1.0; 
-#else
-#define VL_SCALE float vl_scale = 1.0; 
-#endif
+//#if UNITY_UV_STARTS_AT_TOP
+//#define VL_SCALE float vl_scale = -1.0; 
+//#else
+//#define VL_SCALE float vl_scale = 1.0; 
+//#endif
 
 #ifdef USE_COOKIE
 #define COOKIE_COLOR(o) fixed4 vl_cookie = tex2Dproj(internalCookie, o.vl_proj); \
-						fixed3 vl_cookiecol = cookie.rgb*cookie.a; 
+						fixed3 vl_cookiecol = vl_cookie.rgb*vl_cookie.a; 
 #else
 #define COOKIE_COLOR(o) half2 toCent = o.vl_proj.xy / o.vl_proj.w - half2(0.5, 0.5); \
 					half l = 1 - saturate((length(toCent) - 0.3) / (0.5 - 0.3)); \
@@ -35,7 +35,6 @@ float internalBias;
 
 #define VL_TRANSFER_SHADOW(o) float4 vpos = mul(internalWorldLightMV, mul(unity_ObjectToWorld, v.vertex)); \
 								o.vl_proj = mul(internalWorldLightVP, vpos); \
-							VL_SCALE \
 							float4 pj = o.vl_proj * 0.5f; \
 							pj.xy = float2(pj.x, pj.y) + pj.w; \
 							pj.zw = o.vl_proj.zw; \
