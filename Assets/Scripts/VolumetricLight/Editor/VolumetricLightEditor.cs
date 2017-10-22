@@ -42,7 +42,7 @@ public class VolumetricLightEditor : Editor {
         m_Target.intensity = Mathf.Max(0f, EditorGUILayout.FloatField("Intensity", m_Target.intensity));
         m_Target.shadowBias = Mathf.Max(0f, EditorGUILayout.FloatField("ShadowBias", m_Target.shadowBias));
         m_Target.cookie = EditorGUILayout.ObjectField("Cookie", m_Target.cookie, typeof(Texture2D), false) as Texture2D;
-        Undo.RecordObject(m_Target, "Set VolumeLightProperty");
+        Undo.RecordObject(m_Target, "Set VolumetricLightProperty");
         if (m_Target.vertexBased)
             EditorGUILayout.PropertyField(m_Subdivision);
         EditorGUILayout.PropertyField(m_CullingMask);
