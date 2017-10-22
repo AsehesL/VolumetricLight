@@ -30,6 +30,7 @@
 				
 			fixed4 frag(v2f i) : SV_Target
 			{
+				//return i.depth.x / i.depth.y;
 				return EncodeFloatRGBA(i.depth.x / i.depth.y);
 			}
 			ENDCG

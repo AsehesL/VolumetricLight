@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class RealVolumeLight : MonoBehaviour
+public class VertexVolumeLight : MonoBehaviour
 {
     public enum Quality
     {
@@ -59,12 +59,6 @@ public class RealVolumeLight : MonoBehaviour
         set { ResetColor(m_Color, value); }
     }
 
-    public Texture2D cookie
-    {
-        get { return m_Cookie; }
-        set { ResetCookie(value); }
-    }
-
     public LayerMask cullingMask
     {
         get { return m_CullingMask; }
@@ -78,7 +72,7 @@ public class RealVolumeLight : MonoBehaviour
 
     //private const string shadowMapShader = "Shaders/RealVolumeLight/ShadowMapRenderer";
     private const string shadowMapShaderPath = "Shaders/ReplaceDepth";
-    private const string volumetricShaderPath = "Shaders/RealVolumeLight/VolumetricLight";
+    private const string volumetricShaderPath = "Shaders/RealVolumeLight/VertexVolumetricLight";
     private int m_InternalWorldLightVPID;
     private int m_InternalWorldLightMVID;
     private int m_InternalProjectionParams;
@@ -96,9 +90,9 @@ public class RealVolumeLight : MonoBehaviour
     [SerializeField] private float m_Aspect;
     [SerializeField] private Color m_Color = new Color32(255, 247, 216, 255);
     [SerializeField] private float m_Intensity;
-    [SerializeField] private Texture2D m_Cookie;
     [SerializeField] private LayerMask m_CullingMask;
     [SerializeField] private Quality m_Quality;
+    [SerializeField] private float m_Subdivision = 0.7f;
 
     private Camera m_DepthRenderCamera;
     private Mesh m_LightMesh;
@@ -110,9 +104,9 @@ public class RealVolumeLight : MonoBehaviour
     private Shader m_ShadowRenderShader;
     private Shader m_VolumetricLightShader;
 
-    private List<Vector3> m_VertexList = new List<Vector3>();
-    private List<Color> m_ColorList = new List<Color>();
-    private int[] m_Indexes = new int[30];
+    private List<Vector3> m_VertexList;
+    private List<Color> m_ColorList;
+    private int[] m_Indexes;
 
     private Matrix4x4 m_Projection;
     private Matrix4x4 m_WorldToCam;
@@ -144,13 +138,6 @@ public class RealVolumeLight : MonoBehaviour
         SetLightProjectionParams();
         Shader.SetGlobalFloat(m_InternalBiasID, m_ShadowBias);
         Shader.SetGlobalColor(m_InternalLightColorID, new Color(m_Color.r* m_Intensity,m_Color.g* m_Intensity,m_Color.b* m_Intensity,m_Color.a));
-        if (m_Cookie)
-        {
-            Shader.EnableKeyword("USE_COOKIE");
-            Shader.SetGlobalTexture(m_InternalCookieID, m_Cookie);
-        }
-        else
-            Shader.DisableKeyword("USE_COOKIE");
 
         ResetQuality(m_Quality == Quality.Low, m_Quality == Quality.Middle, m_Quality == Quality.High);
 
@@ -346,20 +333,6 @@ public class RealVolumeLight : MonoBehaviour
         m_LightMesh.SetTriangles(m_Indexes, 0);
     }
 
-    private void ResetCookie(Texture2D cookie)
-    {
-        if (m_Cookie == cookie) return;
-        m_Cookie = cookie;
-        if (!m_IsInitialized) return;
-        if (m_Cookie)
-        {
-            Shader.EnableKeyword("USE_COOKIE");
-            Shader.SetGlobalTexture(m_InternalCookieID, m_Cookie);
-        }
-        else
-            Shader.DisableKeyword("USE_COOKIE");
-    }
-
     private void ResetCullingMask(LayerMask cullingMask)
     {
         if (m_CullingMask == cullingMask) return;
@@ -389,33 +362,82 @@ public class RealVolumeLight : MonoBehaviour
         Matrix4x4 mt = transform.worldToLocalMatrix * m_DepthRenderCamera.cameraToWorldMatrix * m_DepthRenderCamera.projectionMatrix.inverse;
         m_LightMesh.Clear();
 
+        int zstep = (int)(m_Range / m_Subdivision);
+        int hstep = 20;
+
+        if (m_VertexList == null)
+            m_VertexList = new List<Vector3>();
+        if (m_ColorList == null)
+            m_ColorList = new List<Color>();
+        if (m_Indexes == null)
+            m_Indexes = new int[4*(zstep*hstep*6)];
+
+        //int currentIndex = 0;
+        int index = 0;
         for (int i = 0; i < 2; i++)
         {
             for (int j = 0; j < 2; j++)
             {
-                float x = i == 0 ? -1 : 1;
-                float y = i == j ? -1 : 1;
-                AddVertex(mt.MultiplyPoint(new Vector3(x, y, -1)), i * 4 + j * 2);
-                AddVertex(mt.MultiplyPoint(new Vector3(x, y, 1)), i * 4 + j * 2 + 1);
-                if (i > 0 && j > 0)
-                {
+                float bx = i == 0 ? -1 : 1;
+                float by = i == j ? -1 : 1;
+                float tx = i == j ? -1 : 1;
+                float ty = i == 1 ? -1 : 1;
 
-                    m_Indexes[i * 12 + j * 6] = i * 4 + j * 2;
-                    m_Indexes[i * 12 + j * 6 + 1] = i * 4 + j * 2 + 1;
-                    m_Indexes[i * 12 + j * 6 + 2] = 1;
-                    m_Indexes[i * 12 + j * 6 + 3] = i * 4 + j * 2;
-                    m_Indexes[i * 12 + j * 6 + 4] = 1;
-                    m_Indexes[i * 12 + j * 6 + 5] = 0;
-                }
-                else
+                Vector3 beg1 = mt.MultiplyPoint(new Vector3(bx, by, -1));
+                Vector3 to1 = mt.MultiplyPoint(new Vector3(bx, by, 1));
+                Vector3 beg2 = mt.MultiplyPoint(new Vector3(tx, ty, -1));
+                Vector3 to2 = mt.MultiplyPoint(new Vector3(tx, ty, 1));
+
+                int faceIndex = i * 2 + j;
+
+                for (int k = 0; k <= zstep; k++)
                 {
-                    m_Indexes[i * 12 + j * 6] = i * 4 + j * 2;
-                    m_Indexes[i * 12 + j * 6 + 1] = i * 4 + j * 2+1;
-                    m_Indexes[i * 12 + j * 6 + 2] = i * 4 + j * 2+3;
-                    m_Indexes[i * 12 + j * 6 + 3] = i * 4 + j * 2;
-                    m_Indexes[i * 12 + j * 6 + 4] = i * 4 + j * 2+3;
-                    m_Indexes[i * 12 + j * 6 + 5] = i * 4 + j * 2+2;
+                    float zl = ((float)k) / zstep;
+                    Vector3 v1 = Vector3.Lerp(beg1, to1, zl);
+                    Vector3 v2 = Vector3.Lerp(beg2, to2, zl);
+                    for (int p = 0; p <= hstep; p++)
+                    {
+                        float hl = ((float) p)/hstep;
+                        float x = Mathf.Lerp(v1.x, v2.x, hl);
+                        float y = Mathf.Lerp(v1.y, v2.y, hl);
+                        int currentIndex = faceIndex*(zstep+1)*(hstep+1) + k*(hstep + 1) + p;
+                        AddVertex(new Vector3(x, y, v1.z), currentIndex);
+                        if (k < zstep && p < hstep)
+                        {
+                            m_Indexes[index] = faceIndex * (zstep + 1) * (hstep + 1) + k*(hstep + 1) + p;
+                            m_Indexes[index + 1] = faceIndex * (zstep + 1) * (hstep + 1) + (k+1)*(hstep + 1) + p;
+                            m_Indexes[index + 2] = faceIndex * (zstep + 1) * (hstep + 1) + (k+1)*(hstep + 1) + p + 1;
+                            m_Indexes[index + 3] = faceIndex * (zstep + 1) * (hstep + 1) + k*(hstep + 1) + p;
+                            m_Indexes[index + 4] = faceIndex * (zstep + 1) * (hstep + 1) + (k+1)*(hstep + 1) + p + 1;
+                            m_Indexes[index + 5] = faceIndex * (zstep + 1) * (hstep + 1) + k*(hstep + 1) + p + 1;
+                            index += 6;
+                        }
+                       
+                        //currentIndex ++;
+                    }
                 }
+
+                //AddVertex(mt.MultiplyPoint(new Vector3(x, y, -1)), i * 4 + j * 2);
+                //AddVertex(mt.MultiplyPoint(new Vector3(x, y, 1)), i * 4 + j * 2 + 1);
+//                if (i > 0 && j > 0)
+//                {
+//
+//                    m_Indexes[i * 12 + j * 6] = i * 4 + j * 2;
+//                    m_Indexes[i * 12 + j * 6 + 1] = i * 4 + j * 2 + 1;
+//                    m_Indexes[i * 12 + j * 6 + 2] = 1;
+//                    m_Indexes[i * 12 + j * 6 + 3] = i * 4 + j * 2;
+//                    m_Indexes[i * 12 + j * 6 + 4] = 1;
+//                    m_Indexes[i * 12 + j * 6 + 5] = 0;
+//                }
+//                else
+//                {
+//                    m_Indexes[i * 12 + j * 6] = i * 4 + j * 2;
+//                    m_Indexes[i * 12 + j * 6 + 1] = i * 4 + j * 2+1;
+//                    m_Indexes[i * 12 + j * 6 + 2] = i * 4 + j * 2+3;
+//                    m_Indexes[i * 12 + j * 6 + 3] = i * 4 + j * 2;
+//                    m_Indexes[i * 12 + j * 6 + 4] = i * 4 + j * 2+3;
+//                    m_Indexes[i * 12 + j * 6 + 5] = i * 4 + j * 2+2;
+//                }
             }
         }
 

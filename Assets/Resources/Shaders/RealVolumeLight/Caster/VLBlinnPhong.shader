@@ -24,6 +24,7 @@ Shader "VolumeLight/Caster/VLBlinnPhong"
 			
 			#include "UnityCG.cginc"
 			#include "Lighting.cginc"
+			#include "../VLUtils.cginc"
 
 			struct v2f
 			{
@@ -32,8 +33,7 @@ Shader "VolumeLight/Caster/VLBlinnPhong"
 				float4 worldPos : TEXCOORD2;
 				UNITY_FOG_COORDS(3)
 				float4 vertex : SV_POSITION;
-				float depth : TEXCOORD4;
-				float4 proj:TEXCOORD5;
+				VL_SHADOW_COORD(4,5)
 			};
 
 			sampler2D _MainTex;
@@ -42,27 +42,6 @@ Shader "VolumeLight/Caster/VLBlinnPhong"
 
 			float _Specular;
 			half _Gloss;
-
-			uniform float4 internalWorldLightPos;
-			uniform float4 internalWorldLightColor;
-
-			sampler2D internalShadowMap;
-#ifdef USE_COOKIE
-			sampler2D internalCookie;
-#endif
-			float4x4 internalWorldLightMV;
-			float4x4 internalWorldLightVP;
-			float4 internalProjectionParams;
-			float internalBias;
-
-			float3 GetLightDirection(float3 worldPos) {
-				return internalWorldLightPos.xyz*(2 * internalWorldLightPos.w - 1)-worldPos*internalWorldLightPos.w;
-			}
-
-			float LinearLightEyeDepth(float z)
-			{
-				return 1.0 / (internalProjectionParams.z * z + internalProjectionParams.w);
-			}
 			
 			v2f vert (appdata_base v)
 			{
@@ -72,36 +51,13 @@ Shader "VolumeLight/Caster/VLBlinnPhong"
 				o.uv = TRANSFORM_TEX(v.texcoord, _MainTex);
 				o.worldNormal = UnityObjectToWorldNormal(v.normal);
 				UNITY_TRANSFER_FOG(o,o.vertex);
-				float4 vpos = mul(internalWorldLightMV, mul(unity_ObjectToWorld, v.vertex));
-				o.proj = mul(internalWorldLightVP, vpos);
-#if UNITY_UV_STARTS_AT_TOP
-				float scale = -1.0;
-#else
-				float scale = 1.0;
-#endif
-				float4 pj = o.proj * 0.5f;
-				pj.xy = float2(pj.x, pj.y) + pj.w;
-				pj.zw = o.proj.zw;
-				o.proj = pj;
-				o.depth = -vpos.z;
+				VL_TRANSFER_SHADOW(o)
 				return o;
 			}
 			
 			fixed4 frag (v2f i) : SV_Target
 			{
-				fixed4 shadow = tex2Dproj(internalShadowMap, i.proj);
-#ifdef USE_COOKIE
-				fixed4 cookie = tex2Dproj(internalCookie, i.proj);
-				fixed3 cookiecol = cookie.rgb*cookie.a;
-#else
-				half2 toCent = i.proj.xy / i.proj.w - half2(0.5, 0.5);
-				half l = 1 - saturate((length(toCent) - 0.3) / (0.5 - 0.3));
-				fixed3 cookiecol = fixed3(l, l, l);
-#endif
-				float depth = LinearLightEyeDepth(DecodeFloatRGBA(shadow));
-				float sc = step(i.depth - internalBias, depth)*(1 - saturate(i.depth*internalProjectionParams.w));
-
-				float2 atten = saturate((0.5 - abs(i.proj.xy / i.proj.w - 0.5)) / (1 - 0.999));
+				VL_APPLY_SHADOW(i) 
 				float3 litDir = normalize(GetLightDirection(i.worldPos.xyz));
 				float3 viewDir = normalize(UnityWorldSpaceViewDir(i.worldPos.xyz));
 				float3 h = normalize(viewDir + litDir);
@@ -109,9 +65,8 @@ Shader "VolumeLight/Caster/VLBlinnPhong"
 				float spec = max(0, dot(i.worldNormal, h));
 				float4 gi = texCUBE(_GI, i.worldNormal);
 
-				fixed4 col = tex2D(_MainTex, i.uv);
-
-				col.rgb *= UNITY_LIGHTMODEL_AMBIENT.rgb + cookiecol*(internalWorldLightColor.rgb* ndl*gi.rgb + _SpecColor.rgb * pow(spec, _Specular)*_Gloss*internalWorldLightColor.rgb)*atten.x*atten.y *sc;
+				fixed4 col = tex2D(_MainTex, i.uv); 
+				col.rgb *= UNITY_LIGHTMODEL_AMBIENT.rgb + VL_LIGHT*(ndl*gi.rgb + _SpecColor.rgb * pow(spec, _Specular)*_Gloss) *VL_ATTEN;
 				
 				UNITY_APPLY_FOG(i.fogCoord, col);
 				return col;
