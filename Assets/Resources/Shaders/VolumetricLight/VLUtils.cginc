@@ -43,7 +43,7 @@ float internalBias;
 
 #define VL_APPLY_SHADOW(i)  fixed4 shadow = tex2Dproj(internalShadowMap, i.vl_proj); \
 							COOKIE_COLOR(i) \
-							float depth = DecodeFloatRGBA(shadow) / internalProjectionParams.w; \
+							float depth = shadow.r / internalProjectionParams.w; \
 							float vl_shadow = step(i.vl_depth - internalBias, depth) *(1 - saturate(i.vl_depth*internalProjectionParams.w)); \
 							float2 vl_atten = saturate((0.5 - abs(i.vl_proj.xy / i.vl_proj.w - 0.5)) / (1 - 0.999)); 
 

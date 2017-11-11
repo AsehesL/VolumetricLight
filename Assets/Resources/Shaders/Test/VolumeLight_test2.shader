@@ -80,7 +80,8 @@
 					if(pjuv.x>0&&pjuv.x<1&&pjuv.y>0&&pjuv.y<1)
 						boardFac = 1;
 					
-					half dep = DecodeFloatRGBA(tex2D(_DepthTex, pjuv)); 
+					//half dep = DecodeFloatRGBA(tex2D(_DepthTex, pjuv));
+					half dep = tex2D(_DepthTex, pjuv).r;
 					half cdep = -cpos.z / lightZParams.x;
 
 					if(cdep < dep)

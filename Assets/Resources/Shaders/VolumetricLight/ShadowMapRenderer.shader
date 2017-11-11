@@ -35,7 +35,8 @@ Shader "Hidden/ShadowMapRenderer"
 				
 			fixed4 frag(v2f i) : SV_Target
 			{
-				return EncodeFloatRGBA(i.depth);
+				//return EncodeFloatRGBA(i.depth);
+				return i.depth;
 			}
 			ENDCG
 		}
@@ -66,7 +67,8 @@ Shader "Hidden/ShadowMapRenderer"
 			fixed4 frag(v2f i) : SV_Target{
 				fixed4 texcol = tex2D(_MainTex, i.uv);
 				clip(texcol.a*_Color.a - _Cutoff);
-				return EncodeFloatRGBA(i.depth);
+				//return EncodeFloatRGBA(i.depth);
+				return i.depth;
 			}
 			ENDCG
 		}
@@ -95,7 +97,8 @@ Shader "Hidden/ShadowMapRenderer"
 				return o;
 			}
 			fixed4 frag(v2f i) : SV_Target{
-				return EncodeFloatRGBA(i.depth);
+				//return EncodeFloatRGBA(i.depth);
+				return i.depth;
 			}
 			ENDCG
 		}
@@ -130,7 +133,8 @@ Shader "Hidden/ShadowMapRenderer"
 				half alpha = tex2D(_MainTex, i.uv).a;
 
 				clip(alpha - _Cutoff);
-				return EncodeFloatRGBA(i.depth);
+				//return EncodeFloatRGBA(i.depth);
+				return i.depth;
 			}
 			ENDCG
 		}
@@ -160,7 +164,8 @@ Shader "Hidden/ShadowMapRenderer"
 				return o;
 			}
 			fixed4 frag(v2f i) : SV_Target{
-				return EncodeFloatRGBA(i.depth);
+				//return EncodeFloatRGBA(i.depth);
+				return i.depth;
 			}
 			ENDCG
 		}
@@ -200,7 +205,8 @@ Shader "Hidden/ShadowMapRenderer"
 				half alpha = tex2D(_MainTex, i.uv).a;
 
 				clip(alpha - _Cutoff);
-				return EncodeFloatRGBA(i.depth);
+				//return EncodeFloatRGBA(i.depth);
+				return i.depth;
 			}
 			ENDCG
 		}
@@ -235,7 +241,8 @@ Shader "Hidden/ShadowMapRenderer"
 			fixed4 frag(v2f i) : SV_Target{
 				fixed4 texcol = tex2D(_MainTex, i.uv);
 				clip(texcol.a - _Cutoff);
-				return EncodeFloatRGBA(i.depth);
+				//return EncodeFloatRGBA(i.depth);
+				return i.depth;
 			}
 			ENDCG
 		}
@@ -269,7 +276,8 @@ Shader "Hidden/ShadowMapRenderer"
 			fixed4 frag(v2f i) : SV_Target{
 				fixed4 texcol = tex2D(_MainTex, i.uv);
 				clip(texcol.a - 0.001);
-				return EncodeFloatRGBA(i.depth);
+				//return EncodeFloatRGBA(i.depth);
+				return i.depth;
 			}
 			ENDCG
 		}
@@ -307,7 +315,8 @@ Shader "Hidden/ShadowMapRenderer"
 				fixed4 texcol = tex2D(_MainTex, i.uv);
 				fixed alpha = texcol.a * i.color.a;
 				clip(alpha - _Cutoff);
-				return EncodeFloatRGBA(i.depth);
+				//return EncodeFloatRGBA(i.depth);
+				return i.depth;
 			}
 			ENDCG
 		}
@@ -344,7 +353,8 @@ Shader "Hidden/ShadowMapRenderer"
 				fixed4 texcol = tex2D(_MainTex, i.uv);
 				fixed alpha = texcol.a * i.color.a;
 				clip(alpha - _Cutoff);
-				return EncodeFloatRGBA(i.depth);
+				//return EncodeFloatRGBA(i.depth);
+				return i.depth;
 			}
 			ENDCG
 		}

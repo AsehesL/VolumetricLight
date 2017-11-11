@@ -147,6 +147,7 @@ public class VolumetricLight : MonoBehaviour {
     void Start()
     {
         m_DepthCamera = new VolumetricLightDepthCamera();
+        
         m_Subdivision = Mathf.Clamp(m_Subdivision, 0.1f, m_Range*0.9f);
         if (m_VertexBased)
             m_Mesh = new VLVertexRenderMesh();
