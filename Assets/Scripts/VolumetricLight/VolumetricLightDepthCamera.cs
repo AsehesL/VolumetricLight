@@ -42,7 +42,7 @@ public class VolumetricLightDepthCamera
                 m_DepthRenderCamera = light.gameObject.AddComponent<Camera>();
             m_DepthRenderCamera.hideFlags = HideFlags.HideInHierarchy | HideFlags.HideInInspector;
             m_DepthRenderCamera.aspect = light.aspect;
-            m_DepthRenderCamera.backgroundColor = Color.white;
+            m_DepthRenderCamera.backgroundColor = new Color(0,0,0,0);
             m_DepthRenderCamera.clearFlags = CameraClearFlags.SolidColor;
             m_DepthRenderCamera.depth = 0;
             m_DepthRenderCamera.farClipPlane = light.range;

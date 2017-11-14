@@ -105,8 +105,7 @@
 					half l = 1 - saturate((length(toCent) - 0.3) / (0.5 - 0.3));
 					fixed3 cookiecol = fixed3(l, l, l);
 
-					//half dep = DecodeFloatRGBA(tex2Dlod(internalShadowMap, pjuv)) / internalProjectionParams.w;
-					half dep = tex2Dlod(internalShadowMap, pjuv).r/internalProjectionParams.w;
+					half dep = DecodeFloatRGBA(tex2Dlod(internalShadowMap, pjuv)) / internalProjectionParams.w;
 					float shadow = step(cdep, dep) *(1 - saturate(cdep*internalProjectionParams.w));
 
 					col.rgb += v.color.rgb*delta / 2 * boardFac*shadow;

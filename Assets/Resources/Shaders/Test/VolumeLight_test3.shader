@@ -84,8 +84,7 @@
 					pjuv.y = 1 - pjuv.y;
 #endif
 
-					//half dep = DecodeFloatRGBA(tex2D(_DepthTex, pjuv));
-					half dep = tex2D(_DepthTex, pjuv).r;
+					half dep = DecodeFloatRGBA(tex2D(_DepthTex, pjuv));
 					half cdep = -curvpos.z / lightZParams.x;
 
 					if (cdep < dep)
